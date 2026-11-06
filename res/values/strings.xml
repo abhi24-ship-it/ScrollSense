@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Reel Monster</string>
+    <string name="service_description">Lets Reel Monster float on top of Instagram and YouTube and count every new reel or short you scroll to. Everything stays on your phone. Nothing is sent anywhere.</string>
+</resources>
