@@ -1,0 +1,8 @@
+# Made by build.ps1 - rebuilt every time, no need to store them
+build/
+*.apk
+*.apk.idsig
+
+# The key that signs the APK. Keep it on your laptop only.
+# (build.ps1 makes a new one if it's missing.)
+debug.keystore
