@@ -1,6 +1,5 @@
 # ScrollSense
 
-*Week 2, Project 6 (called "Reel Monster" in the brief), Level 2: automatic.*
 
 > The app was first named Reel Monster. Only names nobody sees on the phone still use it: the internal app ID `com.reelmonster`, the class names `MonsterService` / `MonsterView`, and the `reel-monster` folder. Changing the app ID would make Android treat it as a new app (counts lost, setup redone).
 
