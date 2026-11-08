@@ -13,6 +13,13 @@ import java.time.LocalDate;
  */
 public class Stats {
 
+    /** Most reels allowed per day. After this, ScrollSense closes Reels/Shorts until midnight. */
+    public static final int DAILY_LIMIT = 80;
+
+    public static boolean limitReached(Context c) {
+        return count(c, LocalDate.now()) >= DAILY_LIMIT;
+    }
+
     private static SharedPreferences prefs(Context c) {
         return c.getSharedPreferences("stats", Context.MODE_PRIVATE);
     }

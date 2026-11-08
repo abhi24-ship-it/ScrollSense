@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * The screen inside the app: is the monster on, today's count, time lost and the last 7 days.
+ * The screen inside the app: setup status, today's count, time lost and the last 7 days.
  * The layout is built in code (no XML layout files), and rebuilt every time you come back to
  * the app, so the numbers are always fresh.
  */
@@ -44,36 +44,47 @@ public class MainActivity extends Activity {
         page.setOrientation(LinearLayout.VERTICAL);
         page.setPadding(px(20), px(28), px(20), px(28));
 
-        // Header: monster + title
+        // Header: logo + title
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
         MonsterView monster = new MonsterView(this);
         monster.setCount(todayCount);
         header.addView(monster);
-        TextView title = text("Reel Monster", 28, INK, true);
+        TextView title = text("ScrollSense", 28, INK, true);
         title.setPadding(px(14), 0, 0, 0);
         header.addView(title);
         page.addView(header);
         page.addView(space(16));
 
-        // Is the monster switched on?
+        // Auto mode: the watcher switches ScrollSense on only in Instagram and YouTube
+        WatcherService.start(this);
+        boolean usageOk = hasUsageAccess();
+        boolean switchOk = WatcherService.canSwitch(this);
         LinearLayout status = card();
-        if (isMonsterOn()) {
-            status.addView(text("The monster is awake", 18, GREEN, true));
-            status.addView(text("Open Instagram Reels or YouTube Shorts. The monster floats on top "
-                    + "and counts every new reel by itself. Drag it anywhere.", 14, GREY, false));
+        if (usageOk && switchOk) {
+            status.addView(text("Auto mode is on", 18, GREEN, true));
+            status.addView(text("ScrollSense sleeps everywhere and wakes up only inside Instagram and "
+                    + "YouTube. Payment apps like GPay never see it.", 14, GREY, false));
         } else {
-            status.addView(text("The monster is asleep", 18, INK, true));
-            status.addView(text("Turn it on once: tap the button, open \"Reel Monster\" "
-                    + "(sometimes under \"Installed apps\"), switch it on and tap Allow.", 14, GREY, false));
-            Button turnOn = new Button(this);
-            turnOn.setText("Turn on Reel Monster");
-            turnOn.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) {
-                    startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
-                }
-            });
-            status.addView(turnOn);
+            status.addView(text("Finish setup (one time)", 18, INK, true));
+            status.addView(text((usageOk ? "✓ " : "1. ") + "Usage access: lets ScrollSense see which "
+                    + "app is open (app names only, never the screen).", 14, usageOk ? GREEN : GREY, false));
+            if (!usageOk) {
+                Button allow = new Button(this);
+                allow.setText("Allow usage access");
+                allow.setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+                    }
+                });
+                status.addView(allow);
+            }
+            TextView grant = text((switchOk ? "✓ " : "2. ") + "Auto on/off: plug the phone into the laptop "
+                    + "and run this once:\nadb shell pm grant com.reelmonster "
+                    + "android.permission.WRITE_SECURE_SETTINGS", 14, switchOk ? GREEN : GREY, false);
+            grant.setTextIsSelectable(true);
+            grant.setPadding(0, px(8), 0, 0);
+            status.addView(grant);
         }
         page.addView(status);
 
@@ -83,6 +94,13 @@ public class MainActivity extends Activity {
         todayCard.addView(text(String.valueOf(todayCount), 56, INK, true));
         todayCard.addView(text("reels  ·  " + Stats.formatTime(Stats.millis(this, today))
                 + " lost on Instagram + YouTube", 16, INK, false));
+        int left = Stats.DAILY_LIMIT - todayCount;
+        TextView limit = left > 0
+                ? text("Daily limit: " + Stats.DAILY_LIMIT + " reels · " + left + " left", 14, GREY, false)
+                : text("Limit reached: Reels and Shorts are closed until tomorrow. Chats still work.",
+                        14, Color.parseColor("#D84315"), true);
+        limit.setPadding(0, px(8), 0, 0);
+        todayCard.addView(limit);
         page.addView(todayCard);
 
         // Last 7 days, with a bar for each day
@@ -132,11 +150,13 @@ public class MainActivity extends Activity {
         return row;
     }
 
-    /** True if the user switched the monster on in Accessibility settings. */
-    private boolean isMonsterOn() {
-        String on = Settings.Secure.getString(getContentResolver(),
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-        return on != null && on.contains(getPackageName() + "/");
+    /** True once "Usage access" is allowed for ScrollSense in Settings. */
+    @SuppressWarnings("deprecation")
+    private boolean hasUsageAccess() {
+        android.app.AppOpsManager ops = getSystemService(android.app.AppOpsManager.class);
+        int mode = ops.checkOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(), getPackageName());
+        return mode == android.app.AppOpsManager.MODE_ALLOWED;
     }
 
     // ---------- small helpers ----------

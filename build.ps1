@@ -1,5 +1,5 @@
-# Builds reel-monster.apk from the command line. No Android Studio, no Gradle.
-#   .\build.ps1            -> run the logic tests, then build reel-monster.apk
+# Builds ScrollSense.apk from the command line. No Android Studio, no Gradle.
+#   .\build.ps1            -> run the logic tests, then build ScrollSense.apk
 #   .\build.ps1 -Install   -> same, then install it on the phone plugged in by USB
 param([switch]$Install)
 
@@ -28,10 +28,14 @@ if (Test-Path build) { Remove-Item build -Recurse -Force }
 New-Item -ItemType Directory build\gen, build\classes, build\dex, build\test | Out-Null
 
 # 1. Logic tests for the reel counter (plain Java, runs on the laptop)
-& "$jdk\bin\javac.exe" -encoding UTF-8 -d build\test src\com\reelmonster\ReelDetector.java test\ReelDetectorTest.java
+& "$jdk\bin\javac.exe" -encoding UTF-8 -d build\test src\com\reelmonster\ReelDetector.java src\com\reelmonster\LogoStage.java src\com\reelmonster\AutoSwitch.java test\ReelDetectorTest.java test\LogoStageTest.java test\AutoSwitchTest.java
 Check "compile logic tests"
 & "$jdk\bin\java.exe" -cp build\test com.reelmonster.ReelDetectorTest
 Check "logic tests"
+& "$jdk\bin\java.exe" -cp build\test com.reelmonster.LogoStageTest
+Check "logo stage tests"
+& "$jdk\bin\java.exe" -cp build\test com.reelmonster.AutoSwitchTest
+Check "auto switch tests"
 
 # 2. Resources (strings, icon, accessibility config) -> compiled + R.java
 & "$bt\aapt2.exe" compile --dir res -o build\res.zip
@@ -57,15 +61,15 @@ $LASTEXITCODE = $code; Check "add code to APK"
 Check "align APK"
 if (-not (Test-Path debug.keystore)) {
     & "$jdk\bin\keytool.exe" -genkeypair -keystore debug.keystore -storepass android -keypass android `
-        -alias reelmonster -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Reel Monster" 2>$null
+        -alias reelmonster -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ScrollSense" 2>$null
     Check "create signing key"
 }
-& "$bt\apksigner.bat" sign --ks debug.keystore --ks-pass pass:android --out reel-monster.apk build\aligned.apk
+& "$bt\apksigner.bat" sign --ks debug.keystore --ks-pass pass:android --out ScrollSense.apk build\aligned.apk
 Check "sign APK"
-Write-Host "Built reel-monster.apk ($([math]::Round((Get-Item reel-monster.apk).Length / 1KB)) KB)" -ForegroundColor Cyan
+Write-Host "Built ScrollSense.apk ($([math]::Round((Get-Item ScrollSense.apk).Length / 1KB)) KB)" -ForegroundColor Cyan
 
 # 5. Optional: install on the phone over USB
 if ($Install) {
-    & $adb install -r reel-monster.apk
+    & $adb install -r ScrollSense.apk
     Check "install on phone"
 }

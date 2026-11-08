@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What the monster listens to:
+<!-- What ScrollSense listens to:
      typeWindowStateChanged = "a different app/screen came to the front" (to show or hide the bubble)
      typeViewScrolled       = "a list scrolled" (to spot a new reel)
      typeWindowContentChanged = "something on screen changed" (YouTube Shorts sends no scroll
                                 events, so we check which Shorts page is on screen instead)
-     flagReportViewIds lets us read the names of views, e.g. "clips_viewer_view_pager". -->
+     flagReportViewIds lets us read the names of views, e.g. "clips_viewer_view_pager".
+     flagRetrieveInteractiveWindows lets us ask which app window really has focus
+     (so a small YouTube picture-in-picture window doesn't count as "YouTube is open"). -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/service_description"
     android:accessibilityEventTypes="typeWindowStateChanged|typeViewScrolled|typeWindowContentChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagReportViewIds"
+    android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows"
     android:canRetrieveWindowContent="true"
     android:notificationTimeout="50" />
