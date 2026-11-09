@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's ID card: its name, its screen and services, and the Android versions it runs on.
+     Note: there is NO internet permission, so the app cannot go online even if it wanted to. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.reelmonster"
+    android:versionCode="4"
+    android:versionName="1.4">
+
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34" />
+
+    <!-- See which app is in front (app names only, never the screen). You allow it in
+         Settings > Usage access. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <!-- Switch ScrollSense's accessibility service on/off by itself. Normal apps can't get this:
+         it is given once from the laptop with "adb shell pm grant" (see README). -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <!-- Keep the small watcher running, and start it again after a phone restart. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/logo_stage1"
+        android:allowBackup="false"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <!-- The screen you see when you open the app: setup, today's count, time lost, last 7 days. -->
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- ScrollSense itself. An accessibility service can see which app is open and when a
+             list scrolls, and it can draw a small window on top of other apps.
+             The watcher switches it on ONLY while Instagram or YouTube is open. -->
+        <service
+            android:name=".MonsterService"
+            android:label="@string/app_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_config" />
+        </service>
+
+        <!-- The watcher: switches ScrollSense on in Instagram/YouTube and off everywhere else. -->
+        <service
+            android:name=".WatcherService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Switches the reel counter on only while Instagram or YouTube is open" />
+        </service>
+
+        <!-- Starts the watcher after a phone restart or an app update. -->
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
